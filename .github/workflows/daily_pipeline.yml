@@ -1,0 +1,76 @@
+name: MarketPulse Daily Pipeline
+
+on:
+  schedule:
+    - cron: "0 14 * * *"   # 9 AM ET every day
+  workflow_dispatch:        # allow manual runs from GitHub UI
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set up database
+        run: python setup_db.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
+
+      - name: Layer 1 — Ingest Reddit
+        run: python ingest_reddit.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Layer 1 — Ingest YouTube
+        run: python ingest_youtube.py
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        continue-on-error: true   # don't fail the whole pipeline if quota exceeded
+
+      - name: Layer 2 — Classify signals
+        run: python classify_signals.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Layer 3 — Score brands
+        run: python score_brands.py
+
+      - name: Layer 3 — Fetch stock data
+        run: python fetch_stocks.py
+
+      - name: Layer 4 — Gap detection
+        run: python gap_detection.py
+
+      - name: Phase 2 — Trend Investigation Agent
+        run: python agent_investigate.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Phase 2 — Validation Agent
+        run: python agent_validate.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: marketpulse-outputs
+          path: |
+            brand_scores.json
+            stock_data.json
+            gap_scores.json
+            investigation_briefs.json
+            validation_results.json
+          retention-days: 30

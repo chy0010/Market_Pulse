@@ -1,0 +1,13 @@
+.env
+.claude/
+venv/
+*.docx
+*.pptx
+__pycache__/
+*.pyc
+marketpulse.db
+brand_scores.json
+stock_data.json
+gap_scores.json
+investigation_briefs.json
+validation_results.json
