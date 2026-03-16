@@ -117,19 +117,29 @@ st.markdown(f"""
 # ── data loaders ──────────────────────────────────────────────────────────────
 @st.cache_data(ttl=300)
 def load_signals_df():
-    conn = sqlite3.connect(DB_PATH)
-    df = pd.read_sql_query("""
-        SELECT s.id, s.signal_type, s.confidence, s.intensity,
-               s.brand_or_product, s.ticker_hint, s.trigger_phrase,
-               s.market_implication, s.classified_at,
-               p.text, p.platform, p.timestamp
-        FROM signals s
-        JOIN raw_posts p ON s.post_id = p.id
-        WHERE s.signal_detected = 1
-        ORDER BY s.classified_at DESC
-    """, conn)
-    conn.close()
-    return df
+    # Streamlit Cloud: no SQLite DB, load from exported JSON
+    try:
+        with open("signals_data.json") as f:
+            return pd.DataFrame(json.load(f))
+    except FileNotFoundError:
+        pass
+    # Local dev fallback: live SQLite DB
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql_query("""
+            SELECT s.id, s.signal_type, s.confidence, s.intensity,
+                   s.brand_or_product, s.ticker_hint, s.trigger_phrase,
+                   s.market_implication, s.classified_at,
+                   p.text, p.platform, p.timestamp
+            FROM signals s
+            JOIN raw_posts p ON s.post_id = p.id
+            WHERE s.signal_detected = 1
+            ORDER BY s.classified_at DESC
+        """, conn)
+        conn.close()
+        return df
+    except Exception:
+        return pd.DataFrame()
 
 @st.cache_data(ttl=300)
 def load_json(path, default):
@@ -221,9 +231,12 @@ if page == "Overview":
     """, unsafe_allow_html=True)
 
     # kpi row
-    conn = sqlite3.connect(DB_PATH)
-    total_raw = conn.execute("SELECT COUNT(*) FROM raw_posts").fetchone()[0]
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        total_raw = conn.execute("SELECT COUNT(*) FROM raw_posts").fetchone()[0]
+        conn.close()
+    except Exception:
+        total_raw = 2317  # snapshot count at export time
 
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Posts ingested",   f"{total_raw:,}")
