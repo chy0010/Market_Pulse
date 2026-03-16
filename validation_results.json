@@ -1,0 +1,40 @@
+[
+  {
+    "brand": "Vanicream Moisturizing Cream \u2192 La Roche Posay Double Repair",
+    "ticker": "LRLCY",
+    "gap_score": 44.3,
+    "status": "BUY_WATCH",
+    "price_data": {
+      "30d_return": -12.05,
+      "5d_momentum": -4.42,
+      "current_price": 81.05
+    },
+    "stocktwits": {},
+    "analyst_upgrades_found": 2,
+    "validation_score": 28,
+    "signal_quality": "weak",
+    "price_already_moved": true,
+    "analyst_already_aware": false,
+    "recommended_action": "PASS",
+    "reason": "Despite high gap score, the -12.05% 30-day price decline suggests negative market sentiment already dominates, zero institutional awareness indicates limited credibility, and absence of retail engagement data weakens signal reliability."
+  },
+  {
+    "brand": "Jabra Elite 75t vs Google Pixel Buds Pro 2",
+    "ticker": "GOOGL",
+    "gap_score": 26.0,
+    "status": "MONITOR",
+    "price_data": {
+      "30d_return": -11.03,
+      "5d_momentum": 1.03,
+      "current_price": 305.56
+    },
+    "stocktwits": {},
+    "analyst_upgrades_found": 1,
+    "validation_score": 35,
+    "signal_quality": "weak",
+    "price_already_moved": true,
+    "analyst_already_aware": false,
+    "recommended_action": "PASS",
+    "reason": "The -11.03% monthly decline contradicts the consumer excitement signal, suggesting the market has already repriced; the gap appears driven by a niche product comparison rather than material business catalyst."
+  }
+]

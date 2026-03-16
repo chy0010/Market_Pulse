@@ -1,0 +1,47 @@
+[
+  {
+    "brand": "Eqqualberry bakuchiol serum",
+    "ticker": null,
+    "score": 47.3,
+    "breakout": false,
+    "reddit_sample_count": 10,
+    "headline_count": 0,
+    "brief": "# EQQUALBERRY BAKUCHIOL SERUM \u2014 Consumer Brief\n\n## What Consumers Are Saying\nReddit mentions show two distinct behaviors: (1) active product-seeking/ISO posts for the \"Swimming Pool Toner\" at premium pricing (~$850 shipped), indicating scarcity-driven demand; (2) curiosity-driven discussion about the Vitamin C + barrier repair formulation, with consumers explicitly noting they're \"seeing this everywhere.\" The bakuchiol serum itself appears underrepresented in the signal set relative to the broader brand momentum, suggesting formula innovation is generating awareness but not yet deep product-level traction.\n\n## Institutional Coverage Gap\nNo institutional coverage detected. This is a private brand operating entirely through organic/grassroots community discovery on Reddit and likely TikTok.\n\n## Market Implication\nEqqualberry is capturing early-adopter interest in the K-beauty actives space through differentiated formulation storytelling, but lacks the distribution scale or brand awareness to convert obsession-level momentum into sustainable revenue\u2014a classic pre-institutional phase signal.\n\n## Risk Factors\n- **Scarcity mirage**: High resale pricing ($850) may reflect artificial scarcity rather than demand elasticity\n- **Formula credibility**: Central consumer question (\"Is it chemically possible?\") unanswered; if formulation claims fail verification, momentum reverses sharply\n- **No moat**: Bakuchiol is increasingly commoditized; brand defensibility unclear without IP/distribution"
+  },
+  {
+    "brand": "Jabra Elite 75t vs Google Pixel Buds Pro 2",
+    "ticker": "GOOGL",
+    "score": 46.0,
+    "breakout": false,
+    "reddit_sample_count": 10,
+    "headline_count": 8,
+    "brief": "# CONSUMER INTELLIGENCE BRIEF\n**Google Pixel Buds Pro 2 vs Jabra Elite 75t**\n\n## Consumer Sentiment\nReddit discussion shows **active switching behavior away from Jabra** due to reliability failures: charging issues, firmware failures, and hardware degradation over 1-2 years. Users cite Jabra's market exit as a forcing function for replacement consideration. Google Pixel Buds Pro 2 appears as an implicit alternative for users seeking non-Sony/JBL options, though no direct preference statements emerge. Momentum score (46/100) reflects weak but present negative sentiment toward Jabra, not positive pull toward Google.\n\n## Institutional Gap\nZero coverage of this competitive dynamic in provided institutional headlines. Tech sector updates focus on AI/data infrastructure\u2014not consumer audio hardware. This suggests analyst community hasn't recognized the Jabra exit as a meaningful market opportunity for Google.\n\n## Market Implication\nJabra's product discontinuation creates an uncontested TAM transfer opportunity for Google's budget-premium earbuds segment, but low consumer enthusiasm (46 momentum) indicates weak organic demand capture.\n\n## Risk Factors\n- **Product durability concerns** may anchor consumer skepticism to any replacement\n- **Google's hardware reliability perception** unproven in this category vs. established competitors\n- **Single low-signal data point**\u2014brief requires validation across additional channels before institutional positioning"
+  },
+  {
+    "brand": "MiZumi UV Water Serum SPF 50+ PA++++",
+    "ticker": null,
+    "score": 44.3,
+    "breakout": false,
+    "reddit_sample_count": 10,
+    "headline_count": 0,
+    "brief": "# BRIEF: MiZumi UV Water Serum SPF 50+\n\n## Consumer Signal\nEarly adopters are expressing strong enthusiasm for this Thai-engineered mineral sunscreen, citing exceptional texture (describes as \"water-like\"), minimal white cast, and legitimate 100% mineral formulation without chemical UV boosters. Consumer discovery appears organic via Reddit sunscreen communities, indicating word-of-mouth traction in the competitive Asian skincare segment. Sentiment is decidedly positive but volume remains minimal (single-digit post count).\n\n## Institutional Coverage\nNone detected. No news headlines, analyst coverage, or mainstream media attention. Brand remains under-the-radar despite consumer momentum in niche communities.\n\n## Market Implication\nMiZumi represents an emerging opportunity in the high-growth Asian mineral sunscreen category where Japanese formulation expertise + Thai manufacturing costs create potential for margin-advantaged distribution into Western markets, though current signal strength is too early-stage for institutional positioning.\n\n## Risk Factors\n- **Validation Risk**: Single-source signal; requires broader consumer validation beyond Reddit niche\n- **Supply/Scale Risk**: No visibility on production capacity or distribution infrastructure\n- **Competitive Risk**: Crowded Asian sunscreen market with established players (Purito, Isntree, Anessa)\n- **Regulatory Risk**: Cross-border marketing claims require substantiation\n\n**Recommendation**: Monitor for 2-3 quarters before escalation."
+  },
+  {
+    "brand": "Haruharu probiotic barrier essence",
+    "ticker": null,
+    "score": 44.3,
+    "breakout": false,
+    "reddit_sample_count": 10,
+    "headline_count": 0,
+    "brief": "# HARUHARU PROBIOTIC BARRIER ESSENCE | CONSUMER BRIEF\n\n## Consumer Sentiment & Relevance\nLimited but *highly* positive grassroots advocacy. Posts reveal two distinct demand drivers: (1) **clinical efficacy for compromised skin barriers**\u2014users specifically cite the 3:1:1 probiotic ratio as solving inflammation/irritation problems, and (2) **brand loyalty conversion**\u2014one 49-year-old user reports evangelizing to friends after switching entirely to Korean skincare. The barrier repair positioning directly addresses a growing skincare trend (active ingredient reduction, skin healing focus). Signal is *obsession-grade* despite low post volume, suggesting niche but committed user base.\n\n## Institutional Coverage Gap\n**Zero institutional coverage.** Private, unmapped status confirms this remains a grassroots-driven brand. Korean beauty e-commerce distribution dominates visible footprint.\n\n## Market Implication\nHaruharu owns uncontested positioning in the \"clinical probiotic barrier repair\" niche\u2014a potentially high-margin segment within the $60B+ global skincare market, though current distribution appears limited to enthusiast/regional channels.\n\n## Key Risks\n- **Minimal sample size** (1 obsession signal); limited data for trend validation\n- **Competitor density**: LANEIGE, I'm From, and other K-beauty brands occupy adjacent positioning\n- **Barrier to scale**: Unknown brand awareness outside Reddit/Korean markets; unclear DTC/retail infrastructure\n- **Ingredient commoditization**: Probiotic formulations increasingly common"
+  },
+  {
+    "brand": "Bosca Leather Wallet",
+    "ticker": null,
+    "score": 44.3,
+    "breakout": false,
+    "reddit_sample_count": 10,
+    "headline_count": 0,
+    "brief": "# BOSCA LEATHER WALLET \u2014 CONSUMER BRIEF\n\n## Consumer Sentiment & Signal Quality\nThe dataset reveals **severe data contamination**. Of 8 posts, only 2 reference Bosca wallets, and both are fragmented/incomplete. One user reports 9-year product longevity (2015 purchase, still daily use)\u2014a strong durability signal. The other complaint involves peeling/cracking in under one year, contradicting the positive case. The remaining 6 posts are unrelated (fragrances, German rappers, Guerlain reviews), indicating poor signal extraction or cross-brand confusion.\n\n**Signal reliability: LOW.** The single SPEND_CONFESSION with momentum 44.3/100 cannot support confident analysis on a 1-post foundation.\n\n## Institutional Coverage\nNone. Private company, unmapped ticker. No recent news.\n\n## Market Implication\nInsufficient consumer signal to assess Bosca's competitive position or market momentum; data quality issues prevent meaningful financial conclusions.\n\n## Risk Factors\n1. **Signal pollution** \u2014 Reddit extraction algorithm appears to conflate unrelated brands/categories\n2. **Sample size** \u2014 1 relevant post is statistically meaningless\n3. **Sentiment contradiction** \u2014 Durability claims conflict (9-year success vs. sub-year failure); product variance or user care differences unclear\n4. **No institutional validation** \u2014 Private status limits alternative data sources\n\n**Recommendation**: Expand data collection methodology before re-analysis."
+  }
+]
