@@ -64,7 +64,7 @@ def get_tier2_youtube_mention_count(ticker: str, brand: str) -> int:
         ).isoformat()
 
         cursor.execute(
-            """SELECT text FROM raw_posts
+            """SELECT text, video_title FROM raw_posts
                WHERE source_tier = 'tier2'
                  AND timestamp >= ?""",
             (cutoff,)
@@ -73,9 +73,9 @@ def get_tier2_youtube_mention_count(ticker: str, brand: str) -> int:
         conn.close()
 
         count = 0
-        for (text,) in rows:
-            t = text.lower()
-            if any(term in t for term in search_terms):
+        for (text, video_title) in rows:
+            haystack = (text + " " + (video_title or "")).lower()
+            if any(term in haystack for term in search_terms):
                 count += 1
         return count
     except Exception:

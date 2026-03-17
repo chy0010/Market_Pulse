@@ -107,7 +107,9 @@ def run():
 
     # fetch unprocessed tier1 posts only — tier2 is institutional media, used for gap detection
     cursor.execute(
-        "SELECT id, text FROM raw_posts WHERE processed = 0 AND (source_tier = 'tier1' OR source_tier IS NULL) LIMIT ?",
+        """SELECT id, text, video_title FROM raw_posts
+           WHERE processed = 0 AND (source_tier = 'tier1' OR source_tier IS NULL)
+           LIMIT ?""",
         (BATCH_SIZE,)
     )
     posts = cursor.fetchall()
@@ -122,11 +124,11 @@ def run():
         t = text.lower()
         return any(kw in t for kw in SIGNAL_KEYWORDS)
 
-    filtered = [(pid, txt) for pid, txt in posts if has_keywords(txt)]
+    filtered = [(pid, txt, vtitle) for pid, txt, vtitle in posts if has_keywords(txt)]
     skipped = len(posts) - len(filtered)
 
     # Mark skipped posts as processed without creating a signal row
-    skip_ids = [pid for pid, txt in posts if not has_keywords(txt)]
+    skip_ids = [pid for pid, txt, vtitle in posts if not has_keywords(txt)]
     for pid in skip_ids:
         cursor.execute("UPDATE raw_posts SET processed = 1 WHERE id = ?", (pid,))
     conn.commit()
@@ -134,8 +136,13 @@ def run():
     print(f"Pre-filter: {skipped} posts skipped (no keywords), {len(filtered)} sent to LLM\n")
     signals_found = 0
 
-    for post_id, text in filtered:
-        result = classify_post(client, text)
+    for post_id, text, video_title in filtered:
+        # Prepend video title so the LLM has brand/topic context
+        if video_title:
+            llm_input = f"[Video: {video_title}] {text}"
+        else:
+            llm_input = text
+        result = classify_post(client, llm_input)
 
         if result is None:
             continue
