@@ -229,7 +229,7 @@ if page == "Overview":
         People talk.<br>Markets listen.
       </h1>
       <p style='font-size:14px;color:{MUTED};margin:0;max-width:520px;line-height:1.7'>
-        Scanning Reddit &amp; YouTube for consumer obsession, brand switching,
+        Scanning YouTube for consumer obsession, brand switching,
         and spend signals — before they appear in earnings reports.
       </p>
     </div>
@@ -587,9 +587,8 @@ elif page == "Briefs":
             expanded=(breakout or score >= 45),
         ):
             mc1, mc2, mc3 = st.columns(3)
-            mc1.metric("Momentum",      f"{score:.0f} / 100")
-            mc2.metric("Reddit samples", b.get("reddit_sample_count", 0))
-            mc3.metric("Headlines",      b.get("headline_count", 0))
+            mc1.metric("Momentum",  f"{score:.0f} / 100")
+            mc2.metric("Headlines", b.get("headline_count", 0))
 
             if breakout or action:
                 st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)

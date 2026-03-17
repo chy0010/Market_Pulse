@@ -26,7 +26,7 @@ def split_brand_name(raw: str) -> str:
 
 def load_signals(conn: sqlite3.Connection, days: int = 30) -> list[dict]:
     # Use created_at (ingestion time) for the window — p.timestamp is the original
-    # Reddit/YouTube post date and may be months/years old for historical posts.
+    # YouTube post date and may be months/years old for historical posts.
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     cursor = conn.cursor()
     cursor.execute("""

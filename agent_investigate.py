@@ -1,12 +1,10 @@
 """
 Trend Investigation Agent — Phase 2
 Triggered when a brand crosses the momentum threshold.
-Autonomously pulls more Reddit posts, checks news headlines,
-and returns a one-page brief on the brand.
+Checks news headlines and returns a one-page brief on the brand.
 """
 import os
 import json
-import requests
 import feedparser
 import anthropic
 from dotenv import load_dotenv
@@ -14,23 +12,7 @@ from brand_ticker_map import get_ticker
 
 load_dotenv()
 
-HEADERS = {"User-Agent": "MarketPulse/1.0"}
-REDDIT_SEARCH = "https://www.reddit.com/search.json?q={query}&sort=relevance&limit=10&t=month"
-RSS_SEARCH    = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
-
-
-def fetch_reddit_posts(brand: str) -> list[str]:
-    query = brand.split()[0]  # first word is usually most specific
-    try:
-        resp = requests.get(REDDIT_SEARCH.format(query=query), headers=HEADERS, timeout=10)
-        posts = resp.json()["data"]["children"]
-        return [
-            f"{p['data'].get('title','')} {p['data'].get('selftext','')}".strip()[:300]
-            for p in posts
-            if p["data"].get("title")
-        ]
-    except Exception:
-        return []
+RSS_SEARCH = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
 
 
 def fetch_news_headlines(ticker: str) -> list[str]:
@@ -44,10 +26,9 @@ def fetch_news_headlines(ticker: str) -> list[str]:
 
 
 def build_brief(client: anthropic.Anthropic, brand: str, ticker: str | None,
-                score_data: dict, reddit_posts: list[str], headlines: list[str]) -> str:
+                score_data: dict, headlines: list[str]) -> str:
 
-    reddit_block = "\n".join(f"- {p}" for p in reddit_posts[:8]) or "No additional posts found."
-    news_block   = "\n".join(f"- {h}" for h in headlines[:6]) or "No recent headlines."
+    news_block = "\n".join(f"- {h}" for h in headlines[:6]) or "No recent headlines."
 
     prompt = f"""You are a consumer intelligence analyst preparing a one-page brief for a financial research team.
 
@@ -58,9 +39,6 @@ Signal Type: {score_data.get('dominant_signal_type')}
 Signal Count: {score_data['signal_count']} posts
 Top Trigger Phrase: "{score_data.get('top_trigger', 'N/A')}"
 Breakout Detected: {"YES" if score_data.get('breakout') else "No"}
-
-Recent Reddit posts mentioning this brand:
-{reddit_block}
 
 Recent institutional news headlines:
 {news_block}
@@ -86,21 +64,17 @@ def investigate(brand: str, score_data: dict) -> dict:
     ticker = score_data.get("ticker") or get_ticker(brand)
 
     print(f"\nInvestigating: {brand} (score={score_data['score']})")
-    print("  Fetching Reddit posts...")
-    reddit_posts = fetch_reddit_posts(brand)
-
     print("  Fetching news headlines...")
     headlines = fetch_news_headlines(ticker)
 
     print("  Generating brief...")
-    brief = build_brief(client, brand, ticker, score_data, reddit_posts, headlines)
+    brief = build_brief(client, brand, ticker, score_data, headlines)
 
     result = {
         "brand": brand,
         "ticker": ticker,
         "score": score_data["score"],
         "breakout": score_data.get("breakout", False),
-        "reddit_sample_count": len(reddit_posts),
         "headline_count": len(headlines),
         "brief": brief,
     }
