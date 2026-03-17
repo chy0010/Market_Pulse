@@ -531,6 +531,7 @@ elif page == "Gap Panel":
         action = val.get("recommended_action", "")
         ac     = ACTION_COLORS.get(action, MUTED)
 
+        gap_pill    = pill(f"Gap {g['gap_score']:+.0f} · {status}", sc)
         action_pill = pill(f"{action} · {val.get('validation_score', '—')}", ac) if action else ""
         validation_note = (
             f"<div style='flex:1'>"
@@ -544,7 +545,7 @@ elif page == "Gap Panel":
             f"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px'>"
             f"<div><span style='color:{TEXT};font-size:16px;font-weight:500'>{g['brand']}</span>"
             f"<code style='background:{BORDER};color:{MUTED};padding:1px 8px;border-radius:2px;font-size:11px;margin-left:8px'>{g['ticker']}</code></div>"
-            f"<div style='display:flex;gap:8px'>{pill(f'Gap {g[\"gap_score\"]:+.0f} · {status}', sc)}{action_pill}</div>"
+            f"<div style='display:flex;gap:8px'>{gap_pill}{action_pill}</div>"
             f"</div>"
             f"<div style='display:flex;gap:40px'>"
             f"<div><div style='font-size:10px;color:{MUTED};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px'>Consumer</div>"
