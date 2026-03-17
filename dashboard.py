@@ -437,7 +437,7 @@ elif page == "Signal Feed":
 
     c1, c2, c3 = st.columns(3)
     sig_f  = c1.multiselect("Type", list(SIGNAL_COLORS.keys()), default=list(SIGNAL_COLORS.keys()))
-    conf   = c2.slider("Min confidence", 0.0, 1.0, 0.65, step=0.05)
+    conf   = c2.slider("Min confidence", 0.0, 1.0, 0.50, step=0.05)
     plat_f = c3.multiselect("Platform", signals_df["platform"].unique().tolist(),
                              default=signals_df["platform"].unique().tolist())
 

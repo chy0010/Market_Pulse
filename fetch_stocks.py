@@ -2,11 +2,29 @@ import json
 import yfinance as yf
 from datetime import datetime, timedelta
 
-TICKERS = ["YETI", "FRCOY", "TMUS", "JNJ", "PEP", "LOGI", "SONY", "KDP",
-           "LULU", "NKE", "AAPL", "NVDA", "CMG", "MSFT", "VZ", "QSR"]
+# Fallback list used only when brand_scores.json is not available
+_FALLBACK_TICKERS = ["YETI", "FRCOY", "TMUS", "JNJ", "PEP", "LOGI", "SONY", "KDP",
+                     "LULU", "NKE", "AAPL", "NVDA", "CMG", "MSFT", "VZ", "QSR"]
 
 END   = datetime.today()
 START = END - timedelta(days=90)
+
+
+def load_tickers_from_scores(min_score: float = 30.0) -> list[str]:
+    """Pull unique tickers from brand_scores.json for brands above min_score."""
+    try:
+        with open("brand_scores.json") as f:
+            scores = json.load(f)
+        tickers = [b["ticker"] for b in scores if b.get("ticker") and b.get("score", 0) >= min_score]
+        # deduplicate preserving order
+        seen, unique = set(), []
+        for t in tickers:
+            if t not in seen:
+                seen.add(t)
+                unique.append(t)
+        return unique or _FALLBACK_TICKERS
+    except FileNotFoundError:
+        return _FALLBACK_TICKERS
 
 def fetch_ticker(ticker: str) -> dict | None:
     try:
@@ -42,6 +60,7 @@ def fetch_ticker(ticker: str) -> dict | None:
 
 
 def run():
+    TICKERS = load_tickers_from_scores()
     print(f"Fetching 90-day price data for {len(TICKERS)} tickers...\n")
     results = {}
     for ticker in TICKERS:

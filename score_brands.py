@@ -1,3 +1,4 @@
+import re
 import sqlite3
 import math
 import json
@@ -6,29 +7,43 @@ from brand_ticker_map import get_ticker, normalize
 
 DB_PATH = "marketpulse.db"
 
+# Separators that indicate multiple brands in one extracted field
+_BRAND_SPLIT_RE = re.compile(
+    r'\bvs\.?\b|\s+→\s+|\s+-+>\s+|\s+/\s+|\s+or\s+|\s+and\s+|\s+to\s+',
+    flags=re.IGNORECASE,
+)
+
 
 def normalize_brand(brand: str) -> str:
     return normalize(brand) if brand else ""
 
 
+def split_brand_name(raw: str) -> str:
+    """Return the primary brand from compound strings like 'A vs B', 'A → B'."""
+    parts = _BRAND_SPLIT_RE.split(raw)
+    return parts[0].strip() if parts else raw.strip()
+
+
 def load_signals(conn: sqlite3.Connection, days: int = 30) -> list[dict]:
+    # Use created_at (ingestion time) for the window — p.timestamp is the original
+    # Reddit/YouTube post date and may be months/years old for historical posts.
     cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     cursor = conn.cursor()
     cursor.execute("""
         SELECT s.brand_or_product, s.signal_type, s.confidence, s.intensity,
-               s.signal_detected, p.timestamp, p.platform
+               s.signal_detected, s.trigger_phrase, p.timestamp, p.platform,
+               p.created_at
         FROM signals s
         JOIN raw_posts p ON s.post_id = p.id
         WHERE s.signal_detected = 1
-          AND p.timestamp >= ?
+          AND p.created_at >= ?
     """, (cutoff,))
     cols = [d[0] for d in cursor.description]
     return [dict(zip(cols, row)) for row in cursor.fetchall()]
 
 
-def calculate_momentum_score(signals: list[dict], brand: str) -> dict:
-    brand_signals = [s for s in signals if normalize_brand(s["brand_or_product"]) == normalize_brand(brand)]
-
+def _compute_score(brand_signals: list[dict], brand: str, ticker: str | None) -> dict:
+    """Compute momentum score from a pre-filtered list of signals."""
     if not brand_signals:
         return {"brand": brand, "score": 0, "signal_count": 0}
 
@@ -68,7 +83,6 @@ def calculate_momentum_score(signals: list[dict], brand: str) -> dict:
     total = volume_score + velocity_score + depth_score + cross_platform_score
 
     # --- Breakout Detection ---
-    # Score jumps 15+ pts in 48 hrs → BREAKOUT
     count_48h = sum(1 for s in brand_signals
                     if s["timestamp"] and
                     datetime.fromisoformat(s["timestamp"].replace("Z", "+00:00")) >= now - timedelta(hours=48))
@@ -83,7 +97,7 @@ def calculate_momentum_score(signals: list[dict], brand: str) -> dict:
 
     return {
         "brand": brand,
-        "ticker": get_ticker(brand),
+        "ticker": ticker,
         "score": round(total, 1),
         "volume_score": round(volume_score, 1),
         "velocity_score": round(velocity_score, 1),
@@ -105,6 +119,15 @@ def calculate_momentum_score(signals: list[dict], brand: str) -> dict:
     }
 
 
+def calculate_momentum_score(signals: list[dict], brand: str) -> dict:
+    nb = normalize_brand(brand)
+    brand_signals = [
+        s for s in signals
+        if normalize_brand(s.get("_primary_brand") or s["brand_or_product"]) == nb
+    ]
+    return _compute_score(brand_signals, brand, get_ticker(brand))
+
+
 def run():
     conn = sqlite3.connect(DB_PATH)
     signals = load_signals(conn, days=30)
@@ -114,22 +137,54 @@ def run():
         print("No signals found. Run classify_signals.py first.")
         return
 
-    # collect all unique brands mentioned
+    # Pre-process: split compound brand fields so "A vs B" → primary brand "A"
+    # Store as _primary_brand on each signal for consistent matching below
+    for s in signals:
+        raw = s.get("brand_or_product") or ""
+        # take the first comma-split part, then split on vs/→/etc.
+        first_part = raw.split(",")[0].strip()
+        s["_primary_brand"] = split_brand_name(first_part)
+
+    # collect all unique brands
     brands_seen = set()
     for s in signals:
-        if s["brand_or_product"]:
-            # some posts list multiple brands separated by commas
-            for b in s["brand_or_product"].split(","):
-                b = b.strip()
-                if b:
-                    brands_seen.add(b)
+        if s["_primary_brand"]:
+            brands_seen.add(s["_primary_brand"])
 
-    print(f"Scoring {len(brands_seen)} unique brands...\n")
+    # ── Fix #3: aggregate by ticker so GOOGL accumulates Pixel + Google + Fitbit ──
+    ticker_groups: dict[str, list[str]] = {}
+    standalone_brands: list[str] = []
+    for brand in brands_seen:
+        ticker = get_ticker(brand)
+        if ticker:
+            ticker_groups.setdefault(ticker, []).append(brand)
+        else:
+            standalone_brands.append(brand)
+
+    print(f"Scoring {len(ticker_groups)} ticker groups + {len(standalone_brands)} standalone brands...\n")
 
     results = []
-    for brand in brands_seen:
-        score = calculate_momentum_score(signals, brand)
-        if score["signal_count"] > 0:
+
+    # Score each ticker group (combined signals from all brand variants)
+    for ticker, brand_list in ticker_groups.items():
+        norms = {normalize_brand(b) for b in brand_list}
+        combined = [s for s in signals if normalize_brand(s["_primary_brand"]) in norms]
+        if not combined:
+            continue
+        # representative name: whichever brand variant has the most signals
+        rep = max(brand_list,
+                  key=lambda b: sum(1 for s in combined
+                                    if normalize_brand(s["_primary_brand"]) == normalize_brand(b)))
+        score = _compute_score(combined, rep, ticker)
+        if score["signal_count"] >= 3:   # Fix #2: minimum 3 signals
+            results.append(score)
+
+    # Score standalone brands (no ticker mapping)
+    for brand in standalone_brands:
+        nb = normalize_brand(brand)
+        brand_signals = [s for s in signals if normalize_brand(s["_primary_brand"]) == nb]
+        score = _compute_score(brand_signals, brand, None)
+        if score["signal_count"] >= 3:   # Fix #2: minimum 3 signals
             results.append(score)
 
     results.sort(key=lambda x: x["score"], reverse=True)
