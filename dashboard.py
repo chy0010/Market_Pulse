@@ -113,24 +113,13 @@ st.markdown(f"""
   /* slider */
   div[data-testid="stSlider"] {{ color: {MUTED}; }}
 
-  /* hide sidebar entirely — using top nav instead */
-  section[data-testid="stSidebar"] {{ display: none !important; }}
+  /* sidebar — lock open, hide collapse arrow */
+  section[data-testid="stSidebar"] {{
+    min-width: 240px !important;
+    max-width: 240px !important;
+  }}
   div[data-testid="collapsedControl"] {{ display: none !important; }}
-
-  /* top nav tabs */
-  div[data-testid="stTabs"] button {{
-    font-size: 12px !important;
-    font-weight: 500 !important;
-    letter-spacing: 0.06em !important;
-    text-transform: uppercase !important;
-    color: {MUTED} !important;
-    border-bottom: 2px solid transparent !important;
-    padding: 8px 20px !important;
-  }}
-  div[data-testid="stTabs"] button[aria-selected="true"] {{
-    color: {TEXT} !important;
-    border-bottom: 2px solid {TEXT} !important;
-  }}
+  button[kind="header"] {{ display: none !important; }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -177,34 +166,28 @@ validations  = load_json("validation_results.json", [])
 breakouts = sum(1 for b in brand_scores if b.get("breakout"))
 buy_watch = sum(1 for g in gap_scores if g["status"] == "BUY_WATCH")
 
-# ── top header ────────────────────────────────────────────────────────────────
-st.markdown(f"""
-<div style='display:flex;justify-content:space-between;align-items:center;
-            padding:18px 0 14px;border-bottom:1px solid {BORDER};margin-bottom:24px'>
-  <div>
-    <span style='font-family:Cormorant,serif;font-size:22px;font-weight:600;
-                 color:{TEXT};letter-spacing:0.04em'>MarketPulse</span>
-    <span style='font-size:11px;color:{MUTED};letter-spacing:0.08em;
-                 text-transform:uppercase;margin-left:16px'>
-      Consumer Signal Intelligence
-    </span>
-  </div>
-  <div style='display:flex;gap:28px;font-size:12px;color:{MUTED}'>
-    <span><b style='color:{TEXT}'>{len(signals_df):,}</b> signals</span>
-    <span><b style='color:{TEXT}'>{len({b["brand"].split()[0] for b in brand_scores})}</b> brands</span>
-    <span><b style='color:{TEXT}'>{buy_watch}</b> buy-watch</span>
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-    ["Overview", "Trending", "Signal Feed", "Gap Panel", "Briefs", "Stocks"]
-)
-PAGE_TABS = {
-    "Overview": tab1, "Trending": tab2, "Signal Feed": tab3,
-    "Gap Panel": tab4, "Briefs": tab5, "Stocks": tab6,
-}
-page = None  # controlled by tabs below
+# ── sidebar ───────────────────────────────────────────────────────────────────
+with st.sidebar:
+    st.markdown(f"""
+    <div style='padding:24px 8px 20px'>
+      <div style='font-family:Cormorant,serif;font-size:22px;font-weight:600;
+                  color:{TEXT};letter-spacing:0.04em;margin-bottom:4px'>
+        MarketPulse
+      </div>
+      <div style='font-size:11px;color:{MUTED};letter-spacing:0.08em;
+                  text-transform:uppercase'>
+        Consumer Signal Intelligence
+      </div>
+    </div>
+    """, unsafe_allow_html=True)
+    st.divider()
+    st.metric("Signals", f"{len(signals_df):,}")
+    st.metric("Brands tracked", str(len({b["brand"].split()[0] for b in brand_scores})))
+    st.metric("BUY_WATCH alerts", str(buy_watch))
+    st.divider()
+    page = st.radio("", [
+        "Overview", "Trending", "Signal Feed", "Gap Panel", "Briefs", "Stocks"
+    ], label_visibility="collapsed")
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 def page_title(title: str, sub: str = ""):
@@ -234,7 +217,7 @@ def card_open(border_accent: str = BORDER) -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: OVERVIEW
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab1:
+if page == "Overview":
     # hero
     st.markdown(f"""
     <div style='background:{SURFACE};border:1px solid {BORDER};border-radius:8px;
@@ -367,7 +350,7 @@ with tab1:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: TRENDING
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab2:
+elif page == "Trending":
     page_title("Trending Brands", "Ranked by real-time consumer momentum score")
 
     if not brand_scores:
@@ -451,7 +434,7 @@ with tab2:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: SIGNAL FEED
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab3:
+elif page == "Signal Feed":
     page_title("Signal Feed", f"{len(signals_df):,} signals — filter in real time")
 
     c1, c2, c3 = st.columns(3)
@@ -499,7 +482,7 @@ with tab3:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: GAP PANEL
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab4:
+elif page == "Gap Panel":
     page_title("Gap Panel", "Brands where consumer momentum outpaces institutional awareness")
 
     if not gap_scores:
@@ -584,7 +567,7 @@ with tab4:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: BRIEFS
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab5:
+elif page == "Briefs":
     page_title("Intelligence Briefs", "AI-generated research briefs for brands above score 40")
 
     if not briefs:
@@ -639,7 +622,7 @@ with tab5:
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: STOCKS
 # ═══════════════════════════════════════════════════════════════════════════════
-with tab6:
+elif page == "Stocks":
     page_title("Stock Correlation", "90-day price performance vs consumer signal timing")
 
     if not stock_data:
