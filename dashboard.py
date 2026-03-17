@@ -11,7 +11,8 @@ st.set_page_config(
     page_title="MarketPulse",
     page_icon="◈",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
+    menu_items={},
 )
 
 # ── design tokens ─────────────────────────────────────────────────────────────
@@ -112,11 +113,13 @@ st.markdown(f"""
   /* slider */
   div[data-testid="stSlider"] {{ color: {MUTED}; }}
 
-  /* sidebar — styled but default collapsible behaviour */
+  /* sidebar — lock open, hide collapse arrow */
   section[data-testid="stSidebar"] {{
     min-width: 240px !important;
     max-width: 240px !important;
   }}
+  div[data-testid="collapsedControl"] {{ display: none !important; }}
+  button[kind="header"] {{ display: none !important; }}
 </style>
 """, unsafe_allow_html=True)
 
