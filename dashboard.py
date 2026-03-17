@@ -12,6 +12,7 @@ st.set_page_config(
     page_icon="◈",
     layout="wide",
     initial_sidebar_state="expanded",
+    menu_items={},
 )
 
 # ── design tokens ─────────────────────────────────────────────────────────────
@@ -111,6 +112,10 @@ st.markdown(f"""
 
   /* slider */
   div[data-testid="stSlider"] {{ color: {MUTED}; }}
+
+  /* always show sidebar, hide collapse button */
+  div[data-testid="collapsedControl"] {{ display: none; }}
+  section[data-testid="stSidebar"] {{ min-width: 240px !important; width: 240px !important; }}
 </style>
 """, unsafe_allow_html=True)
 
