@@ -531,36 +531,31 @@ elif page == "Gap Panel":
         action = val.get("recommended_action", "")
         ac     = ACTION_COLORS.get(action, MUTED)
 
-        st.markdown(f"""
-        <div style='background:{SURFACE};border:1px solid {BORDER};border-radius:6px;
-                    padding:20px 24px;margin-bottom:10px'>
-          <div style='display:flex;justify-content:space-between;align-items:center;
-                      flex-wrap:wrap;gap:10px;margin-bottom:14px'>
-            <div>
-              <span style='color:{TEXT};font-size:16px;font-weight:500'>{g["brand"]}</span>
-              <code style='background:{BORDER};color:{MUTED};padding:1px 8px;
-                           border-radius:2px;font-size:11px;margin-left:8px'>{g["ticker"]}</code>
-            </div>
-            <div style='display:flex;gap:8px'>
-              {pill(f"Gap {g['gap_score']:+.0f} · {status}", sc)}
-              {pill(f"{action} · {val.get('validation_score', '—')}", ac) if action else ''}
-            </div>
-          </div>
-          <div style='display:flex;gap:40px'>
-            <div>
-              <div style='font-size:10px;color:{MUTED};text-transform:uppercase;
-                          letter-spacing:0.08em;margin-bottom:2px'>Consumer</div>
-              <div style='font-family:Cormorant,serif;font-size:28px;color:{TEXT}'>{g["consumer_score"]:.0f}</div>
-            </div>
-            <div>
-              <div style='font-size:10px;color:{MUTED};text-transform:uppercase;
-                          letter-spacing:0.08em;margin-bottom:2px'>Institutional</div>
-              <div style='font-family:Cormorant,serif;font-size:28px;color:{TEXT}'>{g["institutional_score"]:.0f}</div>
-            </div>
-            {'<div style="flex:1"><div style="font-size:10px;color:' + MUTED + ';text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px">Validation note</div><div style="font-size:12px;color:' + MUTED + ';line-height:1.5">' + str(val.get("reason",""))[:100] + '</div></div>' if val.get("reason") else ''}
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        action_pill = pill(f"{action} · {val.get('validation_score', '—')}", ac) if action else ""
+        validation_note = (
+            f"<div style='flex:1'>"
+            f"<div style='font-size:10px;color:{MUTED};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px'>Validation note</div>"
+            f"<div style='font-size:12px;color:{MUTED};line-height:1.5'>{str(val.get('reason',''))[:100]}</div>"
+            f"</div>"
+        ) if val.get("reason") else ""
+
+        html = (
+            f"<div style='background:{SURFACE};border:1px solid {BORDER};border-radius:6px;padding:20px 24px;margin-bottom:10px'>"
+            f"<div style='display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px'>"
+            f"<div><span style='color:{TEXT};font-size:16px;font-weight:500'>{g['brand']}</span>"
+            f"<code style='background:{BORDER};color:{MUTED};padding:1px 8px;border-radius:2px;font-size:11px;margin-left:8px'>{g['ticker']}</code></div>"
+            f"<div style='display:flex;gap:8px'>{pill(f'Gap {g[\"gap_score\"]:+.0f} · {status}', sc)}{action_pill}</div>"
+            f"</div>"
+            f"<div style='display:flex;gap:40px'>"
+            f"<div><div style='font-size:10px;color:{MUTED};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px'>Consumer</div>"
+            f"<div style='font-family:Cormorant,serif;font-size:28px;color:{TEXT}'>{g['consumer_score']:.0f}</div></div>"
+            f"<div><div style='font-size:10px;color:{MUTED};text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px'>Institutional</div>"
+            f"<div style='font-family:Cormorant,serif;font-size:28px;color:{TEXT}'>{g['institutional_score']:.0f}</div></div>"
+            f"{validation_note}"
+            f"</div>"
+            f"</div>"
+        )
+        st.markdown(html, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE: BRIEFS
