@@ -15,9 +15,16 @@ CREATE TABLE IF NOT EXISTS raw_posts (
     platform    TEXT,
     timestamp   TEXT,
     processed   INTEGER DEFAULT 0,
-    created_at  TEXT DEFAULT CURRENT_TIMESTAMP
+    created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+    source_tier TEXT
 )
 """)
+
+# Safe to re-run: add source_tier column if it doesn't exist yet
+try:
+    cursor.execute("ALTER TABLE raw_posts ADD COLUMN source_tier TEXT")
+except Exception:
+    pass  # column already exists
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS signals (
@@ -40,3 +47,5 @@ conn.close()
 
 print(f"✓ Database created: {os.path.abspath(DB_PATH)}")
 print("✓ Tables created: raw_posts, signals")
+print("✓ source_tier column ensured on raw_posts")
+

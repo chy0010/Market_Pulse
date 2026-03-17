@@ -105,9 +105,9 @@ def run():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # fetch unprocessed posts
+    # fetch unprocessed tier1 posts only — tier2 is institutional media, used for gap detection
     cursor.execute(
-        "SELECT id, text FROM raw_posts WHERE processed = 0 LIMIT ?",
+        "SELECT id, text FROM raw_posts WHERE processed = 0 AND (source_tier = 'tier1' OR source_tier IS NULL) LIMIT ?",
         (BATCH_SIZE,)
     )
     posts = cursor.fetchall()

@@ -28,11 +28,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           YOUTUBE_API_KEY:   ${{ secrets.YOUTUBE_API_KEY }}
 
-      - name: Layer 1 — Ingest Reddit
-        run: python ingest_reddit.py
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
       - name: Layer 1 — Ingest YouTube
         run: python ingest_youtube.py
         env:

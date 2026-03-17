@@ -1,9 +1,11 @@
 import json
+import sqlite3
 import feedparser
 import requests
 import time
 from brand_ticker_map import get_ticker
 
+DB_PATH = "marketpulse.db"
 STOCKTWITS_URL = "https://api.stocktwits.com/api/2/streams/symbol/{ticker}.json"
 RSS_FEEDS = [
     "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US",
@@ -50,15 +52,50 @@ def get_stocktwits_volume(ticker: str) -> int:
     return 0
 
 
+def get_tier2_youtube_mention_count(ticker: str, brand: str) -> int:
+    """Count Tier 2 YouTube posts (institutional media) mentioning the brand or ticker in the last 7 days."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        search_terms = [ticker.lower(), brand.lower().split()[0]]
+        cutoff = (
+            __import__("datetime").datetime.now(__import__("datetime").timezone.utc)
+            - __import__("datetime").timedelta(days=7)
+        ).isoformat()
+
+        cursor.execute(
+            """SELECT text FROM raw_posts
+               WHERE source_tier = 'tier2'
+                 AND timestamp >= ?""",
+            (cutoff,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+
+        count = 0
+        for (text,) in rows:
+            t = text.lower()
+            if any(term in t for term in search_terms):
+                count += 1
+        return count
+    except Exception:
+        return 0
+
+
 def calculate_institutional_awareness(ticker: str, brand: str) -> float:
     """Return a 0–100 institutional awareness score."""
     rss_count = get_rss_mention_count(ticker, brand)
     st_count = get_stocktwits_volume(ticker)
+    yt_tier2_count = get_tier2_youtube_mention_count(ticker, brand)
 
-    # normalize: rss_count max ~10 → 50 pts, stocktwits max ~30 → 50 pts
-    rss_score = min(50, rss_count * 5)
-    st_score = min(50, st_count * 1.7)
-    return round(rss_score + st_score, 1)
+    # normalize:
+    #   rss_count max ~10  → 40 pts
+    #   stocktwits max ~30 → 40 pts
+    #   yt_tier2  max ~10  → 20 pts
+    rss_score = min(40, rss_count * 4)
+    st_score = min(40, st_count * 1.35)
+    yt_score = min(20, yt_tier2_count * 2)
+    return round(rss_score + st_score + yt_score, 1)
 
 
 def calculate_gap(consumer_score: float, institutional_score: float) -> dict:
