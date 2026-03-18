@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timezone
-import anthropic
 
 DB_PATH = "marketpulse.db"
 
@@ -820,6 +819,7 @@ elif page == "Daily Brief":
 
         with st.spinner("Analysing signals…"):
             try:
+                import anthropic
                 client = anthropic.Anthropic(api_key=api_key)
                 prompt = build_prompt()
                 response = client.messages.create(
