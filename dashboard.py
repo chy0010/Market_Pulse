@@ -241,7 +241,7 @@ if page == "Overview":
         total_raw = conn.execute("SELECT COUNT(*) FROM raw_posts").fetchone()[0]
         conn.close()
     except Exception:
-        total_raw = 2317  # snapshot count at export time
+        total_raw = 1717  # youtube-only snapshot (reddit removed)
 
     c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Posts ingested",   f"{total_raw:,}")
