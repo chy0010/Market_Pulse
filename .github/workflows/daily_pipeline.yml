@@ -58,11 +58,16 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
+      - name: Export signals and metadata
+        run: python export_data.py
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: marketpulse-outputs
           path: |
+            signals_data.json
+            metadata.json
             brand_scores.json
             stock_data.json
             gap_scores.json
