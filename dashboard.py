@@ -1,9 +1,11 @@
 import streamlit as st
 import sqlite3
 import json
+import os
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timezone
+import anthropic
 
 DB_PATH = "marketpulse.db"
 
@@ -184,7 +186,7 @@ with st.sidebar:
     st.metric("BUY_WATCH alerts", str(buy_watch))
     st.divider()
     page = st.radio("", [
-        "Overview", "Trending", "Signal Feed", "Gap Panel", "Briefs", "Stocks"
+        "Overview", "Trending", "Signal Feed", "Gap Panel", "Briefs", "Stocks", "Daily Brief"
     ], label_visibility="collapsed")
 
 # ── helpers ───────────────────────────────────────────────────────────────────
@@ -726,3 +728,110 @@ elif page == "Stocks":
             "Gap":       next((g["status"] for g in gap_scores if g["ticker"] == t), "—"),
         })
     st.dataframe(pd.DataFrame(rows_tbl), use_container_width=True, hide_index=True)
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE: DAILY BRIEF
+# ═══════════════════════════════════════════════════════════════════════════════
+elif page == "Daily Brief":
+    page_title("Daily Brief", "AI-generated market intelligence from today's consumer signals")
+
+    # ── build data snapshot for the LLM ───────────────────────────────────────
+    top_brands = sorted(brand_scores, key=lambda x: x.get("score", 0), reverse=True)[:10]
+
+    signal_type_counts = {}
+    for _, row in signals_df.iterrows():
+        t = row.get("signal_type", "UNKNOWN")
+        signal_type_counts[t] = signal_type_counts.get(t, 0) + 1
+
+    top_signals = signals_df[signals_df["confidence"] >= 0.75].head(15) if not signals_df.empty else pd.DataFrame()
+
+    buy_watch_items = [g for g in gap_scores if g.get("status") == "BUY_WATCH"]
+    monitor_items   = [g for g in gap_scores if g.get("status") == "MONITOR"]
+
+    def build_prompt() -> str:
+        lines = [
+            "You are a market intelligence analyst. Below is a snapshot of consumer signal data "
+            "collected from YouTube comments today. Your job is to write a clear, insightful daily "
+            "market brief that explains what this data is representing — what consumers are talking "
+            "about, which brands are gaining momentum, what market implications stand out, and where "
+            "the most interesting opportunities or risks are.\n",
+
+            "Write in a professional but direct tone. Use sections with headers. Be specific — "
+            "reference actual brand names, signal types, and scores from the data. Do not pad with "
+            "generic statements.\n",
+
+            "--- DATA SNAPSHOT ---\n",
+
+            f"Total signals detected: {len(signals_df)}",
+            f"Brands tracked: {len(top_brands)}\n",
+
+            "SIGNAL TYPE BREAKDOWN:",
+        ]
+        for stype, cnt in sorted(signal_type_counts.items(), key=lambda x: -x[1]):
+            lines.append(f"  {stype}: {cnt}")
+
+        lines.append("\nTOP BRANDS BY MOMENTUM SCORE (out of 100):")
+        for b in top_brands:
+            ticker = f" [{b['ticker']}]" if b.get("ticker") else ""
+            lines.append(f"  {b['brand']}{ticker} — score {b['score']:.0f}, "
+                         f"dominant signal: {b.get('dominant_signal','?')}, "
+                         f"signal count: {b.get('signal_count', '?')}")
+
+        if not top_signals.empty:
+            lines.append("\nHIGH-CONFIDENCE SIGNALS (conf ≥ 0.75):")
+            for _, row in top_signals.iterrows():
+                lines.append(f"  [{row['signal_type']}] {row['brand_or_product']} — "
+                             f"\"{row['trigger_phrase']}\" (conf {row['confidence']:.2f})")
+
+        if buy_watch_items:
+            lines.append("\nBUY_WATCH OPPORTUNITIES (consumer momentum ahead of institutional awareness):")
+            for g in buy_watch_items:
+                lines.append(f"  {g['brand']} [{g['ticker']}] — consumer score {g['consumer_score']:.0f}, "
+                             f"institutional score {g['institutional_score']:.0f}, gap +{g['gap_score']:.0f}")
+
+        if monitor_items:
+            lines.append("\nMONITOR (emerging gaps):")
+            for g in monitor_items:
+                lines.append(f"  {g['brand']} [{g['ticker']}] — gap {g['gap_score']:+.0f}")
+
+        lines.append("\n--- END DATA ---\n")
+        lines.append("Write the daily market intelligence brief now:")
+        return "\n".join(lines)
+
+    # ── UI ────────────────────────────────────────────────────────────────────
+    meta = load_json("metadata.json", {})
+    exported_at = meta.get("exported_at", "")
+    if exported_at:
+        try:
+            dt = datetime.fromisoformat(exported_at)
+            exported_at = dt.strftime("%-d %b %Y, %H:%M UTC")
+        except Exception:
+            pass
+        st.markdown(
+            f"<p style='font-size:12px;color:{MUTED}'>Data snapshot: {exported_at}</p>",
+            unsafe_allow_html=True,
+        )
+
+    if st.button("Generate Brief", type="primary"):
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            st.error("ANTHROPIC_API_KEY not set. Add it to your Streamlit secrets.")
+            st.stop()
+
+        with st.spinner("Analysing signals…"):
+            try:
+                client = anthropic.Anthropic(api_key=api_key)
+                prompt = build_prompt()
+                response = client.messages.create(
+                    model="claude-opus-4-6",
+                    max_tokens=1500,
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                brief_text = response.content[0].text
+                st.session_state["daily_brief"] = brief_text
+            except Exception as e:
+                st.error(f"API error: {e}")
+
+    if "daily_brief" in st.session_state:
+        st.markdown("---")
+        st.markdown(st.session_state["daily_brief"])
